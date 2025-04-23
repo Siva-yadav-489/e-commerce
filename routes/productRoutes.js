@@ -21,12 +21,16 @@ router.post("/", adminMiddleware, async (req, res) => {
     } = req.body;
 
     //to check if category already exists
-    let newCategory = await Category.findOne({ name: category });
-    newCategory = newCategory._id;
-    if (!newCategory) {
-      newCategory = new Category({ name: category });
+    if (category) {
+      let newCategory = await Category.findOne({ name: category });
       newCategory = newCategory._id;
+      if (!newCategory) {
+        newCategory = new Category({ name: category });
+        await newCategory.save();
+        newCategory = newCategory._id;
+      }
     }
+    const newCategory = category;
 
     const newProduct = new Product({
       name,

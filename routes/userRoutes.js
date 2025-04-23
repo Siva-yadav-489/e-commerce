@@ -9,7 +9,18 @@ const router = express.Router();
 // register
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, address, role } = req.body;
+    const {
+      name,
+      email,
+      password,
+      street,
+      city,
+      state,
+      pincode,
+      country,
+      role,
+    } = req.body;
+
     const isMatch = await User.findOne({ email });
     if (isMatch) {
       return res.status(400).json({ message: "User already exists" });
@@ -19,7 +30,13 @@ router.post("/register", async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      address,
+      address: {
+        street,
+        city,
+        state,
+        pincode,
+        country,
+      },
       role,
     });
     await newUser.save();
@@ -117,15 +134,28 @@ router.get("/users/:id/address", authMiddleware, async (req, res) => {
 // update user details
 router.put("/users/:id", authMiddleware, async (req, res) => {
   try {
-    const { name, email, password, address } = req.body;
+    const { name, email, password, street, city, state, pincode, country } =
+      req.body;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const updateData = {
+      name,
+      email,
+      address: {
+        street,
+        city,
+        state,
+        pincode,
+        country,
+      },
+    };
 
-    const updateUser = await User.findByIdAndUpdate(
-      req.params.id,
-      { name, email, password: hashedPassword, address },
-      { new: true }
-    );
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    const updateUser = await User.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+    });
     if (!updateUser) {
       return res.status(404).json({ message: "user not found" });
     }
